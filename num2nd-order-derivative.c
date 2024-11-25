@@ -9,7 +9,7 @@
 /*
   void diff(double* u, int N, double dx, double* du)
 
-  Computes a finite difference approximation for du/dx
+  Computes a finite difference approximation for f'(du/dx)
 
   Inputs: 
   u: pointer for input array
@@ -23,13 +23,13 @@
   Usage:
   gcc -o error-calc bugless-nd.c -lm -lblas
 */
-void diff(double* u, int N, double dx, double* du) {
+void diff(double* u, int N, double dx, double* d2u) {
 
  
   //du[0] = (u[1]-u[0])/(dx*dx);
   for(int i =1; i <N; ++i)
     {
-        du[i-1]=(u[i+1]-2*u[i] +u[i-1])/(dx*dx);
+        d2u[i-1]=(u[i+1]-2*u[i] +u[i-1])/(dx*dx);
     }
     //du[N]=(u[N]-u[N-1])/(dx*dx);
 }
@@ -70,24 +70,24 @@ int N = atoi(argv[1]);
 
 
 double* u = (double*)malloc((N+1)*sizeof(double));
-double* du = (double*)malloc((N+1)*sizeof(double));
+double* d2u = (double*)malloc((N-1)*sizeof(double));
 double* errdu = (double*)malloc((N-1)*sizeof(double));//calculating error. 
 double dx = (2.0*M_PI)/N;
 
 init(u, N, dx);  
 // for (int i=0; i<N;++i)
 //     printf("sin[%d] = %f  \n",i, u[i]);
-diff(u, N, dx, du);
+diff(u, N, dx, d2u);
 for (int i=1; i<N;++i)
     {
     //printf("diff = %f - %f = %f \n",cos(i*dx) /*wrong!*/, du[i], cos(i*dx)-du[i]);
-    errdu[i-1]= -1.0*sin(i*dx)- du[i];
+    errdu[i-1]= -1.0*sin(i*dx)- d2u[i-1];
     }
     //bug is in the last argument; u[i] should be u'[i] i.e., cos(i).
 double error_L2 = cblas_ddot(N-1, errdu, 1, errdu, 1);
 printf("L2 error = %f \n", sqrt(error_L2));
 free(u);
-free(du);
+free(d2u);
 free(errdu);
 
 return 0;
